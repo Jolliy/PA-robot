@@ -1,6 +1,6 @@
 #!/usr/bin/env pybricks-micropython
 
-
+import time
 from pybricks.hubs import EV3Brick
 from pybricks.ev3devices import Motor, TouchSensor, ColorSensor
 from pybricks.parameters import Port, Stop, Direction, Color
@@ -11,7 +11,7 @@ ev3 = EV3Brick()
 
 
 
-gripper_motor = Motor(Port.A)
+claw_motor = Motor(Port.A)
 elbow_motor = Motor(Port.B, Direction.COUNTERCLOCKWISE, [8, 40])
 base_motor = Motor(Port.C, Direction.COUNTERCLOCKWISE, [12, 36])
 elbow_motor.control.limits(speed=60, acceleration=120)
@@ -33,15 +33,14 @@ while not base_switch.pressed():
     wait(10)
 base_motor.reset_angle(0)
 base_motor.hold()
-gripper_motor.run_until_stalled(200, then=Stop.COAST, duty_limit=50)
-gripper_motor.reset_angle(0)
-gripper_motor.run_target(200, -90)
-
+claw_motor.run_until_stalled(200, then=Stop.COAST, duty_limit=50)
+claw_motor.reset_angle(0)
+claw_motor.run_target(200, -90)
 
 def pick(position):
     base_motor.run_target(60, position)
     elbow_motor.run_target(60, -40)
-    gripper_motor.run_until_stalled(200, then=Stop.HOLD, duty_limit=50)
+    claw_motor.run_until_stalled(200, then=Stop.HOLD, duty_limit=50)
     elbow_motor.run_target(60,9)
     color = elbow_sensor.color()
     print(color)
@@ -50,32 +49,42 @@ def pick(position):
 def release(position):
     base_motor.run_target(60, position)
     elbow_motor.run_target(60, -40)
-    gripper_motor.run_target(200, -90)
+    claw_motor.run_target(200, -90)
     elbow_motor.run_target(60, 0)
 
+def pick_motion(pick_location, drop_location):
+  pick(pick_location)
+  print(claw_motor.angle())
+  if (claw_motor.angle()<-10):
+    print("item present")
+    ev3.speaker.beep()
+    wait()
+  else: 
+    ev3.speaker.beep()
+    print("item missing")
+  release(drop_location)
 
-LEFT = 160
+def time_start(start):
+  now = time.localtime()
+  current_time = time.strftime("%H:%M:%S", now)
+  print(current_time)
+
+LEFT = 200
+MIDDLE_LEFT = 150
 RIGHT = 0
 MIDDLE = 100
 
 def main():
-  pick(LEFT)
-  if (gripper_motor.angle()<0):
-    rint("item present")
-    ev3.speaker.beep(2)
-  else: 
-    ev3.speaker.beep()
-    print("item missing")
-  release(MIDDLE)
+  time_start(1)
+  active = False
+  while active is not True:
+    pick_motion(LEFT, MIDDLE_LEFT)
+    pick_motion(MIDDLE, MIDDLE_LEFT)
+    pick_motion(RIGHT, MIDDLE_LEFT)
+    wait(5000)
 
-  pick(RIGHT)
-  if (gripper_motor.angle()<0):
-    print("item present")
-    ev3.speaker.beep(2)
-  else: 
-    ev3.speaker.beep()
-    print("item missing")
-  release(MIDDLE)
+
+  
 
 if __name__ == "__main__":
   main()
