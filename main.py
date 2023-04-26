@@ -28,20 +28,32 @@ def display():
   selected = 0
   time = [0,0,0]
   while press:
-    ev3.screen.clear()
     ev3.screen.draw_text(0,0,"Set timer: ")
     ev3.screen.draw_text(0,50, str(time[0]) + ":" + str(time[1]) + ":" +  str(time[2]))
     for i in ev3.buttons.pressed():
+      ev3.screen.clear()
       if ev3.buttons.pressed()[0] == Button.CENTER:
         press = False
-      if ev3.buttons.pressed()[0] == Button.UP and time[selected] < 24:
+      elif ev3.buttons.pressed()[0] == Button.UP:
         time[selected] = time[selected] + 1
-      if ev3.buttons.pressed()[0] == Button.DOWN and time[selected] < 0:
+        while len(ev3.buttons.pressed()) != 0:
+          wait(1)
+      elif ev3.buttons.pressed()[0] == Button.DOWN and time[selected] > 0:
         time[selected] = time[selected] - 1
-      if ev3.buttons.pressed()[0] == Button.LEFT and selected != 0:
+        while len(ev3.buttons.pressed()) != 0:
+          wait(1)
+      elif ev3.buttons.pressed()[0] == Button.LEFT and selected != 0:
         selected = selected - 1
-      if ev3.buttons.pressed()[0] == Button.RIGHT and selected != 2:
+        while len(ev3.buttons.pressed()) != 0:
+          wait(1)
+      elif ev3.buttons.pressed()[0] == Button.RIGHT and selected < 2:
         selected = selected + 1
+        while len(ev3.buttons.pressed()) != 0:
+          wait(1)
+  
+  wait_time = time[0] * 3600 + time[1] * 60 + time[2]
+  wait_time = wait_time * 1000
+  wait(wait_time)
 
 
 while elbow_sensor.reflection() > 1:
@@ -70,13 +82,20 @@ def pick(position):
       print("green:", rgb[1])
       print("blue:", rgb[2])
       if rgb[0] > 10 and rgb[1] >10:
-        print("Yellow")
+        print("YELLOW")
+        return 200
       if rgb[0] > 10 and rgb[1] < 10:
         print("RED")
+        return 0
       if rgb[2] > 10 and rgb[1] > 10:
-        print("green")
+        print("GREEN")
+        return 100
       if rgb[2] > 10 and rgb[1] < 10:
-        print("blue")
+        print("BLUE")
+        return 50
+      return 150
+    else:
+      return 150
     elbow_motor.run_target(80,0)
 
 def release(position):
@@ -85,8 +104,16 @@ def release(position):
     claw_motor.run_target(200, -90)
     elbow_motor.run_target(60, 0)
 
-def pick_motion(pick_location, drop_location):
-  pick(pick_location)
+def pick_motion(pick_location):
+  drop_location = pick(pick_location)
+  if pick_location == 150:
+    print("Pick up location: MIDDLE_LEFT")
+  elif pick_location == 0:
+    print("Pick up location: RIGHT")
+  elif pick_location == 100:
+    print("Pick up location: MIDDLE")
+  elif pick_location == 200:
+    print("Pick up location: LEFT")
   if (claw_motor.angle()<-10):
     print("item present")
     ev3.speaker.beep()
@@ -97,10 +124,6 @@ def pick_motion(pick_location, drop_location):
     print("item missing")
   release(drop_location)
 
-def time_start():
-  start_time = "15:01:00"
-  print(time.strftime("%H:%M:%S"))
-
 
 
 LEFT = 200
@@ -110,15 +133,14 @@ MIDDLE = 100
 
 def main():
   display()
-  time_start()
   active = False
   while active is not True:
-    pick_motion(MIDDLE, MIDDLE)
-    pick_motion(MIDDLE, MIDDLE)
-    pick_motion(MIDDLE, MIDDLE)
-    pick_motion(MIDDLE, MIDDLE)
-    pick_motion(MIDDLE, MIDDLE)
-    pick_motion(LEFT, LEFT)
+    pick_motion(MIDDLE_LEFT)
+    pick_motion(LEFT)
+    pick_motion(RIGHT)
+    pick_motion(MIDDLE_LEFT)
+    pick_motion(MIDDLE_LEFT)
+    pick_motion(MIDDLE_LEFT)
     wait(5000)
 
 
