@@ -21,6 +21,20 @@ elbow_sensor = ColorSensor(Port.S2)
 elbow_motor.run_time(-30, 1000)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
 elbow_motor.run(15)
 
+while elbow_sensor.reflection() > 1:
+  wait(10)
+elbow_motor.reset_angle(0)
+elbow_motor.hold()
+base_motor.run(-60)
+
+while not base_switch.pressed():
+    wait(10)
+base_motor.reset_angle(0)
+base_motor.hold()
+claw_motor.run_until_stalled(200, then=Stop.COAST, duty_limit=50)
+claw_motor.reset_angle(0)
+claw_motor.run_target(200, -90)
+
 COLORS = [Color.RED, Color.BLUE, Color.GREEN, Color.YELLOW]
 
 def display():
@@ -56,31 +70,18 @@ def display():
   wait(wait_time)
 
 
-while elbow_sensor.reflection() > 1:
-  wait(10)
-elbow_motor.reset_angle(0)
-elbow_motor.hold()
-base_motor.run(-60)
+# def display_pick():
 
-while not base_switch.pressed():
-    wait(10)
-base_motor.reset_angle(0)
-base_motor.hold()
-claw_motor.run_until_stalled(200, then=Stop.COAST, duty_limit=50)
-claw_motor.reset_angle(0)
-claw_motor.run_target(200, -90)
 
 def pick(position):
     base_motor.run_target(60, position)
-    elbow_motor.run_target(60, -40)
-    claw_motor.run_until_stalled(200, then=Stop.HOLD, duty_limit=50)
+    # elbow_motor.run_target(60, -40)
+    elbow_motor.run_until_stalled(-30, then=Stop.HOLD, duty_limit=5)
+    claw_motor.run_until_stalled(200, then=Stop.HOLD, duty_limit=50)q
     elbow_motor.run_target(60,9)
     if (claw_motor.angle()<-10):
       color = elbow_sensor.color()
       rgb = elbow_sensor.rgb()
-      print("red:", rgb[0])
-      print("green:", rgb[1])
-      print("blue:", rgb[2])
       if rgb[0] > 10 and rgb[1] >10:
         print("YELLOW")
         return 200
@@ -102,7 +103,7 @@ def release(position):
     base_motor.run_target(60, position)
     elbow_motor.run_target(60, -40)
     claw_motor.run_target(200, -90)
-    elbow_motor.run_target(60, 0)
+    elbow_motor.run_target(60, 20)
 
 def pick_motion(pick_location):
   drop_location = pick(pick_location)
@@ -119,10 +120,13 @@ def pick_motion(pick_location):
     ev3.speaker.beep()
     wait(300)
     ev3.speaker.beep()
+    release(drop_location)
+    return True
   else: 
     ev3.speaker.beep()
     print("item missing")
-  release(drop_location)
+    claw_motor.run_target(200, -90)
+    return False
 
 
 
@@ -135,19 +139,13 @@ def main():
   display()
   active = False
   while active is not True:
-    pick_motion(MIDDLE_LEFT)
-    pick_motion(LEFT)
-    pick_motion(RIGHT)
-    pick_motion(MIDDLE_LEFT)
-    pick_motion(MIDDLE_LEFT)
-    pick_motion(MIDDLE_LEFT)
-    wait(5000)
+    if not pick_motion(RIGHT):
+      wait(5000)
 
 
 
 
 if __name__ == "__main__":
   main()
-
 
 
