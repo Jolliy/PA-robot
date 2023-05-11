@@ -35,8 +35,6 @@ claw_motor.run_until_stalled(200, then=Stop.COAST, duty_limit=50)
 claw_motor.reset_angle(0)
 claw_motor.run_target(200, -90)
 
-COLORS = [Color.RED, Color.BLUE, Color.GREEN, Color.YELLOW]
-
 def display():
   press = True
   selected = 0
@@ -70,14 +68,11 @@ def display():
   wait(wait_time)
 
 
-# def display_pick():
-
-
 def pick(position):
     base_motor.run_target(60, position)
     # elbow_motor.run_target(60, -40)
     elbow_motor.run_until_stalled(-30, then=Stop.HOLD, duty_limit=5)
-    claw_motor.run_until_stalled(200, then=Stop.HOLD, duty_limit=50)q
+    claw_motor.run_until_stalled(200, then=Stop.HOLD, duty_limit=50)
     elbow_motor.run_target(60,9)
     if (claw_motor.angle()<-10):
       color = elbow_sensor.color()
@@ -87,7 +82,7 @@ def pick(position):
         return 200
       if rgb[0] > 10 and rgb[1] < 10:
         print("RED")
-        return 0
+        return 150
       if rgb[2] > 10 and rgb[1] > 10:
         print("GREEN")
         return 100
